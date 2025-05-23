@@ -1,4 +1,5 @@
-import {Main} from "../main.js";
+import {navigateToMain,  showAllQuizzesPreview, createDeleteHandler} from "./utils.js";
+
 
 export function CreateQuiz() {
     const container = document.createElement('div');
@@ -12,11 +13,7 @@ export function CreateQuiz() {
     backButton.innerText = 'Back';
 
     backButton.addEventListener('click', () => {
-        const main = document.getElementById('main');
-        while (main.firstChild) {
-            main.removeChild(main.firstChild);
-        }
-        main.appendChild(Main());
+        navigateToMain()
     });
 
     const header = document.createElement('div');
@@ -76,71 +73,45 @@ export function CreateQuiz() {
     preview.className = 'preview'
 
     form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            let answers = [];
-            let correctAnswer = '';
-            const quizQuestion = questionInput.value;
+        e.preventDefault();
+        let answers = [];
+        let correctAnswer = '';
+        const quizQuestion = questionInput.value;
 
-            const answerInputs = form.querySelectorAll('input[type="text"].text-input');
-            const radios = form.querySelectorAll('input[type="radio"]');
+        const answerInputs = form.querySelectorAll('input[type="text"].text-input');
+        const radios = form.querySelectorAll('input[type="radio"]');
 
-            answerInputs.forEach((input) => {
-                answers.push(input.value);
-            });
-
-            radios.forEach((radio, index) => {
-                if (radio.checked) {
-                    correctAnswer = answers[index];
-                }
-            });
-
-            if (!quizQuestion || answers.some(answer => !answer) || !correctAnswer) {
-                alert('All fields are required!');
-                return;
-            }
-
-            const quiz = {
-                question: quizQuestion,
-                answers: answers,
-                correct: correctAnswer
-            };
-
-            let quizzes = JSON.parse(localStorage.getItem('quizzes')) || [quizzes[0]];
-            quizzes.push(quiz);
-            localStorage.setItem('quizzes', JSON.stringify(quizzes));
-
-            showAllQuizzesPreview(quizzes);
-            form.reset();
+        answerInputs.forEach((input) => {
+            answers.push(input.value);
         });
 
-// Funktion zur Anzeige aller gespeicherten Quiz-Fragen
-        function showAllQuizzesPreview(quizzes) {
-            preview.innerHTML = `
-        <h3>All Cards:</h3>
-        ${quizzes.map((quiz, quizIndex) => `
-            <div class="quiz-preview">
-                <p><strong>Question ${quizIndex + 1}:</strong> ${quiz.question}</p>
-                <ul>
-                    ${quiz.answers.map((ans, i) => `
-                        <li>
-                            ${String.fromCharCode(65 + i)}: ${ans} 
-                            ${ans === quiz.correct ? "<strong>(Right)</strong>" : ""}
-                        </li>
-                    `).join('')}
-                </ul>
-                <button onclick="deleteQuiz(${quizIndex})">Delete</button>
-            </div>
-        `).join('')}
-    `;
+        radios.forEach((radio, index) => {
+            if (radio.checked) {
+                correctAnswer = answers[index];
+            }
+        });
+
+        if (!quizQuestion || answers.some(answer => !answer) || !correctAnswer) {
+            alert('All fields are required!');
+            return;
         }
 
-// Lösch-Funktion (muss global verfügbar sein)
-        window.deleteQuiz = function(index) {
-            let quizzes = JSON.parse(localStorage.getItem('quizzes')) || [];
-            quizzes.splice(index, 1);
-            localStorage.setItem('quizzes', JSON.stringify(quizzes));
-            showAllQuizzesPreview(quizzes);
+        const quiz = {
+            question: quizQuestion,
+            answers: answers,
+            correct: correctAnswer
         };
+
+        let quizzes = JSON.parse(localStorage.getItem('quizzes')) || [];
+        quizzes.push(quiz);
+        localStorage.setItem('quizzes', JSON.stringify(quizzes));
+
+        showAllQuizzesPreview(quizzes, preview, {
+            onDelete: createDeleteHandler(quizzes,preview)
+        });
+
+        form.reset();
+    });
 
     form.appendChild(button);
     form.appendChild(preview);
@@ -149,6 +120,7 @@ export function CreateQuiz() {
     container.appendChild(form);
 
     const quizzes = JSON.parse(localStorage.getItem('quizzes')) || [];
-    showAllQuizzesPreview(quizzes);
+    showAllQuizzesPreview(quizzes, preview, {onDelete: createDeleteHandler(quizzes,preview)} );
     return container;
 }
+

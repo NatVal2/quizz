@@ -1,4 +1,5 @@
 import {Main} from "../main.js";
+import {navigateToMain} from "./utils.js";
 
 export function Play (){
     const container = document.createElement('div');
@@ -13,11 +14,7 @@ export function Play (){
 
 
     backToButton.addEventListener('click', () => {
-        const main = document.getElementById('main');
-        while (main.firstChild) {
-            main.removeChild(main.firstChild);
-        }
-        main.appendChild(Main());
+       navigateToMain()
     });
     const header = document.createElement('div');
     header.className = 'header';

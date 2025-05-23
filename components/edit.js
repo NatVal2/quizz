@@ -1,4 +1,5 @@
 import { Main } from "../main.js";
+import {navigateToMain,showAllQuizzesPreview, createDeleteHandler } from "./utils.js";
 
 export function Edit() {
     const editContainer = document.createElement('div');
@@ -7,25 +8,21 @@ export function Edit() {
     const editName = document.createElement("h2");
     editName.innerText = "Edit Quiz";
 
-    const back = document.createElement('button');
-    back.className = 'back-button';
-    back.innerText = 'Back';
+    const backButton = document.createElement('button');
+    backButton.ButtonclassName = 'back-button';
+    backButton.innerText = 'Back';
 
-    back.addEventListener('click', () => {
-        const main = document.getElementById('main');
-        while (main.firstChild) {
-            main.removeChild(main.firstChild);
-        }
-        main.appendChild(Main());
+    backButton.addEventListener('click', () => {
+      navigateToMain()
     });
 
     const header = document.createElement('div');
     header.className = 'header';
     header.appendChild(editName);
-    header.appendChild(back);
+    header.appendChild(backButton);
 
-    const items = document.createElement('div');
-    items.className = 'quiz-items';
+    const preview = document.createElement('div');
+    preview.className = 'quiz-items';
 
     const deleteButton = document.createElement('button');
     deleteButton.innerText = 'DELETE ALL';
@@ -35,34 +32,21 @@ export function Edit() {
     let quizzes = JSON.parse(localStorage.getItem('quizzes')) || [];
 
     function renderQuizzes() {
-        items.innerHTML = `
-            <h3>All Cards:</h3>
-            ${quizzes.length ? quizzes.map((quiz, quizIndex) => `
-                <div class="quiz-preview" data-index="${quizIndex}">
-                    <p><strong>Question ${quizIndex + 1}:</strong> ${quiz.question}</p>
-                    <ul>
-                        ${quiz.answers.map((ans, i) => `
-                            <li>
-                                ${String.fromCharCode(65 + i)}: ${ans} 
-                                ${ans === quiz.correct ? "<strong>(Right)</strong>" : ""}
-                            </li>
-                        `).join('')}
-                    </ul>
-                    <button class="delete-btn" data-index="${quizIndex}">DELETE</button>
-                    <button class="edit-btn" data-index="${quizIndex}">EDIT</button>
-                </div>
-            `).join('') : '<div class="no-cards">No cards available</div>'}
-        `;
-
+        showAllQuizzesPreview(quizzes, preview, {
+            onDelete: createDeleteHandler(quizzes, preview, {
+                onEdit: showEditForm
+            }),
+            onEdit: showEditForm
+        });
         // Add event listeners
-        items.querySelectorAll('.delete-btn').forEach(btn => {
+        preview.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const index = parseInt(e.target.dataset.index);
                 deleteQuiz(index);
             });
         });
 
-        items.querySelectorAll('.edit-btn').forEach(btn => {
+        preview.querySelectorAll('.edit-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const index = parseInt(e.target.dataset.index);
                 showEditForm(index);
@@ -70,15 +54,9 @@ export function Edit() {
         });
     }
 
-    function deleteQuiz(index) {
-        quizzes.splice(index, 1);
-        localStorage.setItem('quizzes', JSON.stringify(quizzes));
-        renderQuizzes();
-    }
-
     function showEditForm(index) {
         const quiz = quizzes[index];
-        const quizPreview = items.querySelector(`.quiz-preview[data-index="${index}"]`);
+        const quizPreview = preview.querySelector(`.quiz-preview[data-index="${index}"]`);
 
         if (!quizPreview) return;
 
@@ -113,7 +91,7 @@ export function Edit() {
     }
 
     function saveEditedQuiz(index) {
-        const editForm = items.querySelector(`.quiz-preview[data-index="${index}"] .edit-form`);
+        const editForm = preview.querySelector(`.quiz-preview[data-index="${index}"] .edit-form`);
         if (!editForm) return;
 
         const question = editForm.querySelector('.edit-question').value;
@@ -146,7 +124,7 @@ export function Edit() {
     renderQuizzes();
 
     editContainer.appendChild(header);
-    editContainer.appendChild(items);
+    editContainer.appendChild(preview);
     editContainer.appendChild(deleteButton);
 
     return editContainer;
