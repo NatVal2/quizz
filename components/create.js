@@ -12,9 +12,7 @@ export function CreateQuiz() {
     backButton.className = 'back-button';
     backButton.innerText = 'Back';
 
-    backButton.addEventListener('click', () => {
-        navigateToMain()
-    });
+    backButton.addEventListener('click',navigateToMain);
 
     const header = document.createElement('div');
     header.className = 'header';
@@ -38,7 +36,8 @@ export function CreateQuiz() {
     form.appendChild(label);
     form.appendChild(questionInput);
 
-    const options = ['A', 'B', 'C', 'D'];
+    const ANSWER_COUNT = 4;
+    const options = Array.from({ length: ANSWER_COUNT }, (_, i) => String.fromCharCode(65 + i));
 
     options.forEach((text, index) => {
         const optionsWrapper = document.createElement('div');
@@ -97,9 +96,9 @@ export function CreateQuiz() {
         }
 
         const quiz = {
-            question: quizQuestion,
-            answers: answers,
-            correct: correctAnswer
+            question: sanitizeInput(quizQuestion),
+            answers: answers.map(sanitizeInput),
+            correct: sanitizeInput(correctAnswer)
         };
 
         let quizzes = JSON.parse(localStorage.getItem('quizzes')) || [];
@@ -120,7 +119,7 @@ export function CreateQuiz() {
     container.appendChild(form);
 
     const quizzes = JSON.parse(localStorage.getItem('quizzes')) || [];
-    showAllQuizzesPreview(quizzes, preview, {onDelete: createDeleteHandler(quizzes,preview)} );
+    showAllQuizzesPreview(quizzes, preview, {onDelete: createDeleteHandler(quizzes,preview)});
     return container;
 }
 
